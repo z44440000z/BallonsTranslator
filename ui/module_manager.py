@@ -263,7 +263,6 @@ class ImgtransThread(QThread):
 
     finish_blktrans_stage = Signal(str, int)
     finish_blktrans = Signal(int, list)
-    unload_modules = Signal(list)
 
     detect_counter = 0
     ocr_counter = 0
@@ -348,9 +347,8 @@ class ImgtransThread(QThread):
         self.inpaint_counter = 0
         self.num_pages = num_pages = len(self.imgtrans_proj.pages)
 
-        low_vram_trans = self.translator.low_vram_mode
         if self.translator is not None:
-            self.parallel_trans = not self.translator.is_computational_intensive() and not low_vram_trans
+            self.parallel_trans = not self.translator.is_computational_intensive()
         else:
             self.parallel_trans = False
         if self.parallel_trans and cfg_module.enable_translate:
@@ -358,6 +356,8 @@ class ImgtransThread(QThread):
 
         for imgname in self.imgtrans_proj.pages:
             img = self.imgtrans_proj.read_img(imgname)
+            im_h, im_w = img.shape[:2]
+
             mask = blk_list = None
             need_save_mask = False
             blk_removed: List[TextBlock] = []
@@ -428,7 +428,7 @@ class ImgtransThread(QThread):
             if cfg_module.enable_translate:
                 if self.parallel_trans:
                     self.translate_thread.push_pagekey_queue(imgname)
-                elif not low_vram_trans:
+                else:
                     self.translator.translate_textblk_lst(blk_list)
                     self.translate_counter += 1
                     self.update_translate_progress.emit(self.translate_counter)
@@ -450,14 +450,6 @@ class ImgtransThread(QThread):
                 if len(blk_removed) > 0:
                     self.imgtrans_proj.load_mask_by_imgname
         
-        if cfg_module.enable_translate and low_vram_trans:
-            unload_modules(self, ['textdetector', 'inpainter', 'ocr'])
-            for imgname in self.imgtrans_proj.pages:
-                blk_list = self.imgtrans_proj.pages[imgname]
-                self.translator.translate_textblk_lst(blk_list)
-                self.translate_counter += 1
-                self.update_translate_progress.emit(self.translate_counter)
-
     def detect_finished(self) -> bool:
         if self.imgtrans_proj is None:
             return True
@@ -555,8 +547,6 @@ def merge_config_module_params(config_params: Dict, module_keys: List, get_modul
                                 cparam['value'] = mv
                     else:
                         if type(cparam) != type(mparam):
-                            if not isinstance(mparam, dict) and isinstance(cparam, dict):
-                                cparam = cparam['value']
                             try:
                                 cfg_param[mk] = type(mparam)(cparam)
                             except ValueError:
@@ -572,16 +562,6 @@ def merge_config_module_params(config_params: Dict, module_keys: List, get_modul
                 cfg_param.update(new_params)
 
     return config_params
-
-
-def unload_modules(self, module_names):
-    import torch
-    model_deleted = False
-    for module in module_names:
-        module: BaseModule = getattr(self, module)
-        model_deleted = model_deleted or module.unload_model()
-    if model_deleted:
-        soft_empty_cache()
 
 
 class ModuleManager(QObject):
@@ -674,7 +654,12 @@ class ModuleManager(QObject):
         self.setInpainter()
 
     def unload_all_models(self):
-        unload_modules(self, {'textdetector', 'inpainter', 'ocr', 'translator'})
+        model_deleted = False
+        for module in {'textdetector', 'inpainter', 'ocr', 'translator'}:
+            module: BaseModule = getattr(self, module)
+            model_deleted = model_deleted or module.unload_model()
+        if model_deleted:
+            soft_empty_cache()
 
     @property
     def translator(self) -> BaseTranslator:

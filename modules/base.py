@@ -6,8 +6,6 @@ from copy import deepcopy
 from collections import OrderedDict
 
 from utils.logger import logger as LOGGER
-from utils import shared
-
 
 GPUINTENSIVE_SET = {'cuda', 'mps'}
 
@@ -96,12 +94,6 @@ class BaseModule:
     def updateParam(self, param_key: str, param_content):
         self.set_param_value(param_key, param_content)
 
-    @property
-    def low_vram_mode(self):
-        if 'low vram mode' in self.params:
-            return self.get_param_value('low vram mode')
-        return False
-
     def is_cpu_intensive(self)->bool:
         if self.params is not None and 'device' in self.params:
             return self.params['device']['value'] == 'cpu'
@@ -121,12 +113,11 @@ class BaseModule:
         model_deleted = False
         if self._load_model_keys is not None:
             for k in self._load_model_keys:
-                if hasattr(self, k):
-                    model = getattr(self, k)
-                    if model is not None:
-                        del model
-                        setattr(self, k, None)
-                        model_deleted = True
+                model = getattr(self, k)
+                if model is not None:
+                    del model
+                    setattr(self, k, None)
+                    model_deleted = True
     
         if empty_cache and model_deleted:
             soft_empty_cache()
@@ -151,11 +142,6 @@ class BaseModule:
     
     def __del__(self):
         self.unload_model()
-
-    @property
-    def debug_mode(self):
-        return shared.DEBUG
-
 
 os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
 import torch

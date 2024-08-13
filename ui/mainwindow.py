@@ -128,7 +128,7 @@ class MainWindow(mainwindow_cls):
         self.leftBar.imgTransChecked.connect(self.setupImgTransUI)
         self.leftBar.configChecked.connect(self.setupConfigUI)
         self.leftBar.globalSearchChecker.clicked.connect(self.on_set_gsearch_widget)
-        self.leftBar.open_dir.connect(self.OpenProj)
+        self.leftBar.open_dir.connect(self.openDir)
         self.leftBar.open_json_proj.connect(self.openJsonProj)
         self.leftBar.save_proj.connect(self.save_proj)
         self.leftBar.export_doc.connect(self.on_export_doc)
@@ -289,7 +289,6 @@ class MainWindow(mainwindow_cls):
 
         self.configPanel.setupConfig()
         self.configPanel.save_config.connect(self.save_config)
-        self.configPanel.reload_textstyle.connect(self.load_textstyle_from_proj_dir)
 
         textblock_mode = pcfg.imgtrans_textblock
         if pcfg.imgtrans_textedit:
@@ -345,21 +344,6 @@ class MainWindow(mainwindow_cls):
             self.openDir(proj_path)
         else:
             self.openJsonProj(proj_path)
-        
-        if pcfg.let_textstyle_indep_flag and not shared.HEADLESS:
-            self.load_textstyle_from_proj_dir(from_proj=True)
-
-    def load_textstyle_from_proj_dir(self, from_proj=False):
-        if from_proj:
-            text_style_path = osp.join(self.imgtrans_proj.directory, 'textstyles.json')
-        else:
-            text_style_path = 'config/textstyles/default.json'
-        if osp.exists(text_style_path):
-            load_textstyle_from(text_style_path)
-            self.textPanel.formatpanel.textstyle_panel.style_area.setStyles(text_styles)
-        else:
-            pcfg.text_styles_path = text_style_path
-            save_text_styles()
 
     def openDir(self, directory: str):
         try:
@@ -377,7 +361,7 @@ class MainWindow(mainwindow_cls):
     def dropOpenDir(self, directory: str):
         if isinstance(directory, str) and osp.exists(directory):
             self.leftBar.updateRecentProjList(directory)
-            self.OpenProj(directory)
+            self.openDir(directory)
 
     def openJsonProj(self, json_path: str):
         try:
@@ -440,11 +424,13 @@ class MainWindow(mainwindow_cls):
         # according to https://stackoverflow.com/questions/27635068/how-to-retranslate-dynamically-created-widgets
         # we got to do it manually ... I'd rather restart the program
         msg = QMessageBox()
-        msg.setText(self.tr('Restart to apply changes? \n'))
+        msg.setText(self.tr('Restart to apply changes?'))
         msg.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         ret = msg.exec_()
         if ret == QMessageBox.StandardButton.Yes:
             self.restart_signal.emit()
+        # else :
+            
 
     def save_config(self):
         pcfg.drawpanel = self.drawingPanel.get_config()
@@ -700,7 +686,8 @@ class MainWindow(mainwindow_cls):
             self.canvas.setPaintMode(True)
             self.bottomBar.originalSlider.show()
             self.bottomBar.textlayerSlider.show()
-            self.bottomBar.textblockChecker.hide()
+            self.bottomBar.textblockChecker.setChecked(False)
+            self.bottomBar.textblockChecker.setCheckable(False)
         else:
             self.canvas.setPaintMode(False)
             self.rightComicTransStackPanel.setHidden(True)
@@ -710,12 +697,11 @@ class MainWindow(mainwindow_cls):
         if self.bottomBar.texteditChecker.isChecked():
             if self.rightComicTransStackPanel.isHidden():
                 self.rightComicTransStackPanel.show()
-            self.bottomBar.textblockChecker.show()
+            self.bottomBar.textblockChecker.setCheckable(True)
             self.rightComicTransStackPanel.setCurrentIndex(1)
             self.st_manager.setTextEditMode(True)
             self.setTextBlockMode()
         else:
-            self.bottomBar.textblockChecker.hide()
             self.rightComicTransStackPanel.setHidden(True)
             self.st_manager.setTextEditMode(False)
         self.canvas.setPaintMode(False)

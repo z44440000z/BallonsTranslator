@@ -381,7 +381,7 @@ class Slider(QSlider):
         else:
             self._drawVerticalGroove(painter)
 
-        if hasattr(self, 'draw_content') and self.hovering:
+        if hasattr(self, 'draw_content'): # and self.hovering
             # its a bad idea to display text like this, but I leave it as it is for now
             
             option = QStyleOptionSlider()
@@ -407,11 +407,11 @@ class Slider(QSlider):
             else:
                 dx = dy = 0
 
-            dy = self.height() - fm.height() + fm.descent()
-            painter.drawText(dx, dy, value_str)
+            # dy = self.height() # - fm.height()  + fm.descent()
+            # painter.drawText(dx, dy, value_str)
 
-            if self.draw_content is not None:
-                painter.drawText(0, dy, self.draw_content, )
+            # if self.draw_content is not None:
+            #     painter.drawText(0, dy, self.draw_content, )
                 
 
     def _drawHorizonGroove(self, painter: QPainter):
