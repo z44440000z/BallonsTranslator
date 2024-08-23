@@ -74,6 +74,7 @@ class TextEffectPanel(QDialog):
         super().__init__(*args, **kwargs)
 
         self.setModal(True)
+        self.resize(300,400)
 
         self.update_text_style_label = update_text_style_label
         self.fontfmt: FontFormat = None
@@ -106,18 +107,26 @@ class TextEffectPanel(QDialog):
         self.shadow_color_picker = ColorPicker(self)
         self.shadow_color_picker.colorChanged.connect(self.on_shadow_color_changed)
         self.shadow_color_picker.setToolTip(self.tr('Change shadow color'))
-        self.shadow_radius_slider = PaintQSlider(self.tr('radius'))
+        self.shadow_radius_label = QLabel(self.tr('radius'))
+        self.shadow_radius_slider = PaintQSlider()
         self.shadow_radius_slider.setRange(0, 200)
         self.shadow_radius_slider.valueChanged.connect(self.on_shadow_radius_changed)
-        self.shadow_strength_slider = PaintQSlider(self.tr('strength'))
+        self.shadow_radius_slider_value_label = QLabel("0")
+        self.shadow_strength_label = QLabel(self.tr('strength'))
+        self.shadow_strength_slider = PaintQSlider()
         self.shadow_strength_slider.setRange(0, 300)
         self.shadow_strength_slider.valueChanged.connect(self.on_shadow_strength_changed)
-        self.shadow_xoffset_slider = PaintQSlider(self.tr('x offset'))
+        self.shadow_strength_slider_value_label = QLabel("0")
+        self.shadow_xoffset_label = QLabel(self.tr('x offset'))
+        self.shadow_xoffset_slider = PaintQSlider()
         self.shadow_xoffset_slider.setRange(-100, 100)
         self.shadow_xoffset_slider.valueChanged.connect(self.on_shadow_xoffset_changed)
-        self.shadow_yoffset_slider = PaintQSlider(self.tr('y offset'))
+        self.shadow_xoffset_slider_value_label = QLabel("0")
+        self.shadow_yoffset_label = QLabel(self.tr('y offset'))
+        self.shadow_yoffset_slider = PaintQSlider()
         self.shadow_yoffset_slider.setRange(-100, 100)
         self.shadow_yoffset_slider.valueChanged.connect(self.on_shadow_yoffset_changed)
+        self.shadow_yoffset_slider_value_label = QLabel("0")
 
         self.apply_btn = QPushButton(self.tr('Apply'))
         self.apply_btn.clicked.connect(self.on_apply_clicked)
@@ -132,12 +141,22 @@ class TextEffectPanel(QDialog):
         self.setMaximumHeight(C.TEXTEFFECT_MAXHEIGHT)
 
         shadow_layout = QGridLayout()
+        shadow_layout.setColumnMinimumWidth(1,150)
         shadow_layout.addWidget(shadow_label, 0, 0)
-        shadow_layout.addWidget(self.shadow_radius_slider, 0, 1)
-        shadow_layout.addWidget(self.shadow_strength_slider, 0, 2)
-        shadow_layout.addWidget(self.shadow_color_picker, 1, 0, Qt.AlignmentFlag.AlignCenter)
-        shadow_layout.addWidget(self.shadow_xoffset_slider, 1, 1)
-        shadow_layout.addWidget(self.shadow_yoffset_slider, 1, 2)
+        shadow_layout.addWidget(self.shadow_radius_label, 1, 0)
+        shadow_layout.addWidget(self.shadow_radius_slider, 1, 1)
+        shadow_layout.addWidget(self.shadow_radius_slider_value_label, 1, 2)
+        shadow_layout.addWidget(self.shadow_strength_label, 2, 0)
+        shadow_layout.addWidget(self.shadow_strength_slider, 2, 1)
+        shadow_layout.addWidget(self.shadow_strength_slider_value_label, 2, 2)
+
+        shadow_layout.addWidget(self.shadow_xoffset_label, 3, 0)
+        shadow_layout.addWidget(self.shadow_xoffset_slider, 3, 1)
+        shadow_layout.addWidget(self.shadow_xoffset_slider_value_label, 3, 2)
+        shadow_layout.addWidget(self.shadow_yoffset_label, 4, 0)
+        shadow_layout.addWidget(self.shadow_yoffset_slider, 4, 1)
+        shadow_layout.addWidget(self.shadow_yoffset_slider_value_label, 4, 2)
+        shadow_layout.addWidget(self.shadow_color_picker, 5, 0, Qt.AlignmentFlag.AlignCenter)
 
         opacity_layout = QHBoxLayout()
         opacity_layout.addWidget(opacity_label)
@@ -201,20 +220,24 @@ class TextEffectPanel(QDialog):
         self.fontfmt.shadow_color = self.shadow_color_picker.rgb()
         self.updatePreviewPixmap()
 
-    def on_shadow_radius_changed(self):
+    def on_shadow_radius_changed(self, value):
         self.fontfmt.shadow_radius = self.shadow_radius_slider.value() / 100
+        self.shadow_radius_slider_value_label.setText(f'{value}')
         self.updatePreviewPixmap()
 
-    def on_shadow_strength_changed(self):
+    def on_shadow_strength_changed(self, value):
         self.fontfmt.shadow_strength = self.shadow_strength_slider.value() / 100
+        self.shadow_strength_slider_value_label.setText(f'{value}')
         self.updatePreviewPixmap()
 
-    def on_shadow_xoffset_changed(self):
+    def on_shadow_xoffset_changed(self, value):
         self.fontfmt.shadow_offset[0] = self.shadow_xoffset_slider.value() / 100
+        self.shadow_xoffset_slider_value_label.setText(f'{value}')
         self.updatePreviewPixmap()
 
-    def on_shadow_yoffset_changed(self):
+    def on_shadow_yoffset_changed(self, value):
         self.fontfmt.shadow_offset[1] = self.shadow_yoffset_slider.value() / 100
+        self.shadow_yoffset_slider_value_label.setText(f'{value}')
         self.updatePreviewPixmap()
 
     def showEvent(self, e: QShowEvent) -> None:

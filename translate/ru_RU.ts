@@ -656,8 +656,7 @@
         <location filename="../ui/mainwindow.py" line="414"/>
         <source>Restart to apply changes? 
 </source>
-        <translation>Перезапустить, чтобы применить изменения? 
-</translation>
+        <translation>Перезапустить, чтобы применить изменения?</translation>
     </message>
     <message>
         <location filename="../ui/mainwindow.py" line="938"/>

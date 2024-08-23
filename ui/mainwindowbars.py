@@ -580,26 +580,50 @@ class BottomBar(Widget):
         self.textblockChecker.setObjectName('TextblockChecker')
         self.textblockChecker.clicked.connect(self.onTextblockCheckerClicked)
         
-        self.originalSlider = PaintQSlider(self.tr("Original image opacity"), Qt.Orientation.Horizontal, self)
+        self.originalSlider_Label = QLabel(self.tr('Original image opacity'))
+        self.originalSlider_Label.setStyleSheet('font-size: 12px')
+        self.originalSlider = PaintQSlider("", Qt.Orientation.Horizontal, self) # self.tr("Original image opacity")
         self.originalSlider.setFixedWidth(150)
         self.originalSlider.setRange(0, 100)
-
-        self.textlayerSlider = PaintQSlider(self.tr("Text layer opacity"), Qt.Orientation.Horizontal, self)
+        self.originalSlider.valueChanged.connect(self.originalSlider_value)
+        self.originalSlidervalue_Label = QLabel("100")
+        self.originalSlidervalue_Label.setStyleSheet('font-size: 12px')
+        
+        self.textlayerSlider_Label = QLabel(self.tr("Text layer opacity"))
+        self.textlayerSlider_Label.setStyleSheet('font-size: 12px')
+        self.textlayerSlider = PaintQSlider("", Qt.Orientation.Horizontal, self) # self.tr("Text layer opacity")
         self.textlayerSlider.setFixedWidth(150)
         self.textlayerSlider.setValue(100)
         self.textlayerSlider.setRange(0, 100)
+        self.textlayerSlider.valueChanged.connect(self.textlayerSlider_value)
+        self.textlayerSlidervalue_Label = QLabel("100")
+        self.textlayerSlidervalue_Label.setStyleSheet('font-size: 12px')
         
         self.hlayout.addWidget(self.translatorStatusbtn)
         self.hlayout.addWidget(self.transTranspageBtn)
         self.hlayout.addWidget(self.inpainterStatBtn)
         self.hlayout.addSpacerItem(QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum))
+
+        self.hlayout.addWidget(self.textlayerSlider_Label)
         self.hlayout.addWidget(self.textlayerSlider)
+        self.hlayout.addWidget(self.textlayerSlidervalue_Label)
+        self.hlayout.addSpacerItem(QSpacerItem(30, 0))
+
+        self.hlayout.addWidget(self.originalSlider_Label)
         self.hlayout.addWidget(self.originalSlider)
+        self.hlayout.addWidget(self.originalSlidervalue_Label)
+        self.hlayout.addSpacerItem(QSpacerItem(30, 0))
+
         self.hlayout.addWidget(self.paintChecker)
         self.hlayout.addWidget(self.texteditChecker)
         self.hlayout.addWidget(self.textblockChecker)
         self.hlayout.setContentsMargins(60, 0, 10, WINDOW_BORDER_WIDTH)
 
+    def originalSlider_value(self, value):
+        self.originalSlidervalue_Label.setText(f'{value}')
+
+    def textlayerSlider_value(self, value):
+        self.textlayerSlidervalue_Label.setText(f'{value}')
 
     def onPaintCheckerPressed(self):
         checked = self.paintChecker.isChecked()
